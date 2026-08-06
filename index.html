@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mis Notas</title>
+  <style>
+  /* Estilos para el video de fondo */
+  #background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.7);
+  }
+
+  /* Contenedor principal con fondo semitransparente */
+  .content {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    color: #333;
+    font-family: Arial, sans-serif;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 1.8rem; /* letra un poco más pequeña */
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 8px; /* un poco menos padding para texto más pequeño */
+    margin: 6px 0;
+    box-sizing: border-box;
+    border: 2px solid #8125ded4;
+    border-radius: 6px;
+    font-size: 0.9rem; /* letra más pequeña */
+    transition: border-color 0.3s ease;
+  }
+
+  input:focus, textarea:focus {
+    border-color: #000000;
+    outline: none;
+  }
+
+  button {
+    padding: 8px 16px; /* menos padding */
+    background-color: #8125ded4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem; /* letra más pequeña */
+    transition: background-color 0.3s ease;
+    position: relative;
+  }
+
+  button:hover {
+    background-color: #020202;
+  }
+
+  /* Contenedor de cada entrada */
+  .entry {
+    background-color: #d6eaf8;
+    border-left: 6px solid #8125ded4;
+    padding: 12px 16px; /* menos padding */
+    margin: 8px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  .entry h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1rem; /* letra más pequeña */
+    color: #2c3e50;
+  }
+
+  .entry small {
+    color: #2980b9;
+    font-style: italic;
+    font-size: 0.8rem; /* letra más pequeña */
+  }
+
+  .entry p {
+    font-size: 0.9rem; /* letra más pequeña */
+    line-height: 1.3;
+    margin-top: 6px;
+    color: #34495e;
+    white-space: pre-wrap;
+  }
+
+  /* Contenedor botones editar y eliminar */
+  .entry-buttons {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .delete-btn, .edit-btn {
+    position: static;
+    padding: 0 5px;
+    font-weight: bold;
+    font-size: 0.8rem; /* letra más pequeña */
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-radius: 3px;
+    transition: color 0.3s ease;
+  }
+
+  .delete-btn {
+    color: #e74c3c;
+  }
+
+  .delete-btn:hover {
+    color: #c0392b;
+  }
+
+  .edit-btn {
+    color: #2980b9;
+  }
+
+  .edit-btn:hover {
+    color: #1c5980;
+  }
+
+  /* Botón cancelar edición */
+  #cancelEditBtn {
+    margin-left: 10px;
+    background-color: #e74c3c;
+  }
+
+  #cancelEditBtn:hover {
+    background-color: #c0392b;
+  }
+
+  /* Acordeón título */
+  .date-group {
+    margin-top: 20px;
+    border: 1px solid #8125ded4;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .date-header {
+    background-color: #8125ded4;
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem; /* letra más pequeña */
+  }
+
+  .date-header .arrow {
+    transition: transform 0.3s ease, color 0.3s ease;
+    display: inline-block;
+    font-size: 1.1rem; /* letra más pequeña */
+    line-height: 1;
+    cursor: pointer;
+    color: white;
+  }
+
+  .date-header:hover .arrow {
+    color: #000000;
+    transform: scale(1.3) rotate(0deg);
+  }
+
+  .date-header.active .arrow {
+    transform: rotate(90deg);
+    color: white;
+  }
+
+  .date-header.active:hover .arrow {
+    color: #000000;
+    transform: scale(1.3) rotate(90deg);
+  }
+
+  .entries-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    background-color: #f0f8ff;
+    padding: 0 20px;
+  }
+
+  .entries-list.open {
+    max-height: 1000px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* Contenedor para menú desplegable */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 180px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    z-index: 10;
+    right: 0;
+  }
+
+  .dropdown-content button {
+    color: #333;
+    padding: 10px 16px;
+    text-align: left;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem; /* letra más pequeña */
+    border-radius: 0;
+    transition: background-color 0.2s ease;
+  }
+
+  .dropdown-content button:hover {
+    background-color: #000000;
+    color: white;
+  }
+
+  .dropdown.show .dropdown-content {
+    display: block;
+  }
+</style>
+
+</head>
+<body>
+  <!-- Video de fondo -->
+  <video autoplay muted loop id="background-video">
+    <source src="Videos/mylivewallpapers.com-Samurai-Sword-Stars.mp4" type="video/mp4" />
+    Tu navegador no soporta videos HTML5.
+  </video>
+
+  <!-- Contenedor principal -->
+  <div class="content">
+    <h1>My Notes</h1>
+
+
+    <input type="text" id="title" placeholder="Título de la entrada (ej: 27/11/2023)" />
+    <textarea id="content" rows="5" placeholder="Escribe tu entrada aquí..."></textarea>
+    <button id="addEntryBtn">Añadir Entrada</button>
+    <button id="cancelEditBtn" style="display:none;">Cancelar</button>
+
+    <hr style="margin: 20px 0;" />
+
+    <label for="searchDate">Buscar por título (DD/MM/YYYY):</label>
+    <input type="text" id="searchDate" placeholder="Ej: 27/11/2023" style="width: 200px; margin-right: 10px;" />
+    <button id="searchBtn">Buscar</button>
+    <button id="showAllBtn" style="margin-left: 10px;">Mostrar todo</button>
+
+    <div class="dropdown" style="display:inline-block; margin-left: 10px;">
+      <button id="orderBtn">Ordenar por título ▼</button>
+      <div class="dropdown-content" id="orderOptions">
+        <button data-order="recent">Más reciente a más antiguo</button>
+        <button data-order="oldest">Más antiguo a más reciente</button>
+      </div>
+    </div>
+
+    <div id="entriesContainer"></div>
+  </div>
+
+  <script>
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const addEntryBtn = document.getElementById('addEntryBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const entriesContainer = document.getElementById('entriesContainer');
+
+    const searchDateInput = document.getElementById('searchDate');
+    const searchBtn = document.getElementById('searchBtn');
+    const showAllBtn = document.getElementById('showAllBtn');
+    const orderBtn = document.getElementById('orderBtn');
+    const orderOptions = document.getElementById('orderOptions');
+    const dropdown = orderBtn.parentElement;
+
+    let entries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+    let filteredEntries = [...entries];
+    let editEntryId = null;
+    let currentOrder = 'recent'; // Orden por defecto
+
+    function saveEntries() {
+      localStorage.setItem('diaryEntries', JSON.stringify(entries));
+    }
+
+    // Convierte título DD/MM/YYYY a objeto Date para comparar
+    function parseDateFromTitle(title) {
+      const parts = title.split('/');
+      if (parts.length !== 3) return new Date(0);
+      const [day, month, year] = parts.map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    // Agrupa las entradas por título
+    function groupEntriesByTitle(list) {
+      const groups = {};
+      list.forEach(entry => {
+        const title = entry.title;
+        if (!groups[title]) {
+          groups[title] = [];
+        }
+        groups[title].push(entry);
+      });
+      return groups;
+    }
+
+    // Ordena los títulos según currentOrder
+    function sortTitles(titles) {
+      return titles.sort((a, b) => {
+        const dateA = parseDateFromTitle(a);
+        const dateB = parseDateFromTitle(b);
+        if (currentOrder === 'recent') {
+          return dateB - dateA;
+        } else {
+          return dateA - dateB;
+        }
+      });
+    }
+
+    function renderEntries(list) {
+      entriesContainer.innerHTML = '';
+
+      if (list.length === 0) {
+        entriesContainer.innerHTML = '<p>No hay entradas que mostrar.</p>';
+        return;
+      }
+
+      const grouped = groupEntriesByTitle(list);
+      const sortedTitles = sortTitles(Object.keys(grouped));
+
+      sortedTitles.forEach(title => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'date-group';
+
+        const header = document.createElement('div');
+        header.className = 'date-header';
+        header.innerHTML = `<span class="arrow">▶</span>${title}`;
+        groupDiv.appendChild(header);
+
+        const entriesList = document.createElement('div');
+        entriesList.className = 'entries-list';
+
+        grouped[title].forEach(entry => {
+          const entryDiv = document.createElement('div');
+          entryDiv.className = 'entry';
+
+          const buttonsDiv = document.createElement('div');
+          buttonsDiv.className = 'entry-buttons';
+
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Editar';
+          editBtn.className = 'edit-btn';
+          editBtn.onclick = () => startEdit(entry);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Eliminar';
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.onclick = () => {
+            entries = entries.filter(e => e.id !== entry.id);
+            saveEntries();
+            filteredEntries = filteredEntries.filter(e => e.id !== entry.id);
+            renderEntries(filteredEntries);
+            if(editEntryId === entry.id) cancelEdit();
+          };
+
+          buttonsDiv.appendChild(editBtn);
+          buttonsDiv.appendChild(deleteBtn);
+
+          const titleEl = document.createElement('h3');
+          titleEl.textContent = entry.title;
+
+          const dateEl = document.createElement('small');
+          dateEl.textContent = entry.date;
+
+          const contentEl = document.createElement('p');
+          contentEl.textContent = entry.content;
+
+          entryDiv.appendChild(buttonsDiv);
+          entryDiv.appendChild(titleEl);
+          entryDiv.appendChild(dateEl);
+          entryDiv.appendChild(contentEl);
+
+          entriesList.appendChild(entryDiv);
+        });
+
+        groupDiv.appendChild(entriesList);
+        entriesContainer.appendChild(groupDiv);
+
+        header.addEventListener('click', () => {
+          const isOpen = entriesList.classList.toggle('open');
+          header.classList.toggle('active');
+          const arrow = header.querySelector('.arrow');
+          arrow.textContent = isOpen ? '▼' : '▶';
+        });
+      });
+    }
+
+    function startEdit(entry) {
+      editEntryId = entry.id;
+      titleInput.value = entry.title;
+      contentInput.value = entry.content;
+      addEntryBtn.textContent = 'Guardar Cambios';
+      cancelEditBtn.style.display = 'inline-block';
+    }
+
+    function cancelEdit() {
+      editEntryId = null;
+      titleInput.value = '';
+      contentInput.value = '';
+      addEntryBtn.textContent = 'Añadir Entrada';
+      cancelEditBtn.style.display = 'none';
+    }
+
+    addEntryBtn.addEventListener('click', () => {
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
+      if (!title || !content) {
+        alert('Por favor, completa título y contenido.');
+        return;
+      }
+
+      if (editEntryId) {
+        const index = entries.findIndex(e => e.id === editEntryId);
+        if (index > -1) {
+          entries[index].title = title;
+          entries[index].content = content;
+          entries[index].date = new Date().toLocaleString();
+          saveEntries();
+          filteredEntries = [...entries];
+          renderEntries(filteredEntries);
+          cancelEdit();
+        }
+      } else {
+        const newEntry = {
+          id: Date.now(),
+          title,
+          content,
+          date: new Date().toLocaleString()
+        };
+        entries.unshift(newEntry);
+        saveEntries();
+        filteredEntries = [...entries];
+        renderEntries(filteredEntries);
+        titleInput.value = '';
+        contentInput.value = '';
+      }
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+      cancelEdit();
+    });
+
+    searchBtn.addEventListener('click', () => {
+      const searchValue = searchDateInput.value.trim();
+      if (!searchValue) {
+        alert('Por favor, ingresa un título para buscar.');
+        return;
+      }
+      const results = entries.filter(entry => entry.title.includes(searchValue));
+      filteredEntries = results;
+      renderEntries(filteredEntries);
+    });
+
+    showAllBtn.addEventListener('click', () => {
+      filteredEntries = [...entries];
+      renderEntries(filteredEntries);
+    });
+
+    orderBtn.addEventListener('click', () => {
+      dropdown.classList.toggle('show');
+    });
+
+    orderOptions.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        currentOrder = e.target.getAttribute('data-order');
+        dropdown.classList.remove('show');
+        renderEntries(filteredEntries);
+      }
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && e.target !== orderBtn) {
+        dropdown.classList.remove('show');
+      }
+    });
+
+    // Mostrar todas las entradas inicialmente ordenadas por más reciente
+    renderEntries(filteredEntries);
+  </script>
+</body>
+</html>
